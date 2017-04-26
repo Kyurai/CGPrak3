@@ -6,7 +6,7 @@
 
 QT   += core gui opengl
 
-#LIBS += -lopengl32
+LIBS += -lassimp
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,9 +27,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-        myglwidget.cpp
+        myglwidget.cpp \
+    modelloader.cpp
 
 HEADERS  += mainwindow.h \
-            myglwidget.h
+            myglwidget.h \
+    modelloader.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    shader.qrc
+
+DISTFILES +=

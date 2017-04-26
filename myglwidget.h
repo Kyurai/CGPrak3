@@ -6,14 +6,18 @@
 #include <QKeyEvent>
 #include <QWheelEvent>
 #include <QOpenGLBuffer>
+#include <QOpenGLShaderProgram>
+#include <stack>
+#include "modelloader.h"
 
 class MyGLWidget : public QOpenGLWidget
 {
     Q_OBJECT
 private:
-    int angle = 0;
+    double angle = 0;
     double coord_x = 0.0;
     double coord_y = 0.0;
+    double coord_z = 0.0;
     double zoom = 1.0f;
 
     QOpenGLBuffer vbo; //Vertex Buffer Object
@@ -29,6 +33,13 @@ private:
     // Handle für BO der Indizes für die zu zeichnenden Elemente
     GLuint indicesHandle;
 
+    GLfloat* vboData;
+    GLuint* indexData; // GLuint statt GLubyte, da viele Modelle groß sind
+    unsigned int vboLength;
+    unsigned int iboLength;
+
+    QOpenGLShaderProgram shaderProgram;
+    std::stack<QMatrix4x4> matrixStack;
 
 public:
    MyGLWidget();
