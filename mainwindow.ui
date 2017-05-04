@@ -39,6 +39,9 @@
     </item>
     <item>
      <layout class="QVBoxLayout" name="vblControls">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
       <item>
        <widget class="QGroupBox" name="gbxRoation">
         <property name="minimumSize">
@@ -105,7 +108,7 @@
               <bool>true</bool>
              </property>
              <property name="minimum">
-              <double>-10.000000000000000</double>
+              <double>0.000000000000000</double>
              </property>
              <property name="maximum">
               <double>10.000000000000000</double>

@@ -1,8 +1,21 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/shader">
         <file>default130.frag</file>
         <file>default130.vert</file>
         <file>default330.frag</file>
         <file>default330.vert</file>
+    </qresource>
+    <qresource prefix="/textures">
+        <file>earth.jpg</file>
+        <file>jupiter.jpg</file>
+        <file>mars.jpg</file>
+        <file>mercury.jpg</file>
+        <file>moon.jpg</file>
+        <file>neptune.jpg</file>
+        <file>pluto.jpg</file>
+        <file>saturn.jpg</file>
+        <file>sun.jpg</file>
+        <file>uranus.jpg</file>
+        <file>venus.jpg</file>
     </qresource>
 </RCC>

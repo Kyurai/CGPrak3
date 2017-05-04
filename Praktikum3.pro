@@ -28,11 +28,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp\
         mainwindow.cpp \
         myglwidget.cpp \
-    modelloader.cpp
+    modelloader.cpp \
+    planet.cpp
 
 HEADERS  += mainwindow.h \
             myglwidget.h \
-    modelloader.h
+    modelloader.h \
+    planet.h
 
 FORMS    += mainwindow.ui
 
