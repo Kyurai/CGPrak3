@@ -64,19 +64,47 @@ void MyGLWidget::keyPressEvent(QKeyEvent *event)
 {
     //Move upwards (y)
     if (event->key() == Qt::Key_W || event->key() == Qt::Key_Up) {
-        this->setCoord_y(this->getCoord_y() + 0.05);
+        if(this->lastMov == "w"){
+           this->speed = this->speed * 1.1;
+        }
+        else{
+            this->speed = 0.05;
+        }
+        this->setCoord_y(this->getCoord_y() + speed);
+        this->lastMov = "w";
     }
     //Move downwards (y)
     else if(event->key() == Qt::Key_S || event->key() == Qt::Key_Down){
-        this->setCoord_y(this->getCoord_y() - 0.05);
+        if(this->lastMov == "s"){
+            this->speed = this->speed * 1.1;
+        }
+        else{
+            this->speed = 0.05;
+        }
+        this->setCoord_y(this->getCoord_y() - speed);
+        this->lastMov = "s";
     }
     //move to the left (x)
     else if(event->key() == Qt::Key_A || event->key() == Qt::Key_Left){
-        this->setCoord_x(this->getCoord_x() - 0.05);
+        if(this->lastMov == "a"){
+            this->speed = this->speed * 1.1;
+        }
+        else{
+            this->speed = 0.05;
+        }
+        this->setCoord_x(this->getCoord_x() - speed);
+        this->lastMov = "a";
     }
     //move to the right (x)
     else if(event->key() == Qt::Key_D || event->key() == Qt::Key_Right){
-        this->setCoord_x(this->getCoord_x() + 0.05);
+        if(this->lastMov == "d"){
+            this->speed = this->speed * 1.1;
+        }
+        else{
+            this->speed = 0.05;
+        }
+        this->setCoord_x(this->getCoord_x() + speed);
+        this->lastMov = "d";
     }
 }
 
@@ -116,7 +144,7 @@ void MyGLWidget::createGeo(){
 
 void MyGLWidget::initializeGL(){
      glEnable(GL_TEXTURE_2D);
-     qTex = new QOpenGLTexture(QImage(":/textures/sun.jpg").mirrored());
+     qTex = new QOpenGLTexture(QImage(":/textures/moon.jpg").mirrored());
      qTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
      qTex->setMagnificationFilter(QOpenGLTexture::Linear);
      // Anm.: Wenn qTex->textureId() == 0 ist, dann ist etwas schief gegangen
@@ -158,7 +186,7 @@ void MyGLWidget::paintGL(){
     QMatrix4x4 matrix;
     matrix.setToIdentity();
     matrix.perspective(60.0,1.0, 0.1, 1000.0) ;
-    matrix.translate(0.0f + this->coord_x, 0.0f + this->coord_y, 0.0f - 10) ;
+    matrix.translate(this->coord_x,this->coord_y, 0.0f - 10) ;
     matrix.rotate(this->angle,0,1,0) ;
     matrix.scale(this->zoom,this->zoom,this->zoom);
 

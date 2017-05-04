@@ -10,6 +10,7 @@
 #include <stack>
 #include <QOpenGLTexture>
 #include "modelloader.h"
+#include <string>
 
 class MyGLWidget : public QOpenGLWidget
 {
@@ -20,6 +21,11 @@ private:
     double coord_y = 0.0;
     double coord_z = 0.0;
     double zoom = 1.0f;
+
+    //Key Movement
+    std::string lastMov = "";
+    double speed = 0.05;
+
 
     QOpenGLBuffer vbo; //Vertex Buffer Object
     QOpenGLBuffer ibo; //Indices Buffer Object
