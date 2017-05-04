@@ -82,35 +82,30 @@ void MyGLWidget::keyPressEvent(QKeyEvent *event)
 
 void MyGLWidget::fillBuffers(){
     ModelLoader model;
-    bool res = model.loadObjectFromFile("/home/dustin/Documents/CG_Prakt/Praktikum3/models/bunny.obj");
+    bool res = model.loadObjectFromFile("/home/dustin/Documents/CG_Prakt/Praktikum3/models/sphere_low.obj");
     // Wenn erfolgreich, generiere VBO und Index-Array
     if (res) {
-    // Frage zu erwartende Array-Längen ab
-    vboLength = model.lengthOfSimpleVBO();
-    iboLength = model.lengthOfIndexArray();
-    // Generiere VBO und Index-Array
-    vboData = new GLfloat[vboLength];
-    indexData = new GLuint[iboLength];
-    model.genSimpleVBO(vboData);
-    model.genIndexArray(indexData);
+      // Frage zu erwartende Array-Längen ab
+      vboLength = model.lengthOfVBO(0,false,true);
+      iboLength = model.lengthOfIndexArray();
+      // Generiere VBO und Index-Array
+      vboData = new GLfloat[vboLength];
+      indexData = new GLuint[iboLength];
+      model.genVBO(vboData,0,false,true);
+      model.genIndexArray(indexData);
     }
     else {
-    // Modell konnte nicht geladen werden
+        std::cout << "model nicht geladen..." << std::endl;
     }
-
-    // Erzeuge VBO, die Parameter verteilen sich hier auf mehrere Methoden
     vbo.create();
     vbo.bind();
     vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    //vbo.allocate(this->vertices, sizeof(GLfloat) * 4 * 8);
     vbo.allocate(vboData, sizeof(GLfloat) * vboLength);
     vbo.release();
 
-    // Erzeuge Index-Buffer
     ibo.create();
     ibo.bind();
     ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    //ibo.allocate(this->indices, sizeof(GLubyte) * 6);
     ibo.allocate(indexData, sizeof(GLuint) * iboLength);
     ibo.release();
 }
@@ -174,134 +169,112 @@ void MyGLWidget::createGeo(){
 }
 
 void MyGLWidget::initializeGL(){
-    createGeo();
-    fillBuffers();
+        glEnable(GL_TEXTURE_2D);
+        qTex = new QOpenGLTexture(QImage("/home/dustin/Documents/CG_Prakt/Praktikum3/earth.jpg").mirrored());
+        qTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+        qTex->setMagnificationFilter(QOpenGLTexture::Linear);
+        // Anm.: Wenn qTex->textureId() == 0 ist, dann ist etwas schief gegangen
 
-    // Lade die Shader-Sourcen aus externen Dateien (ggf. anpassen)
-    shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/default330.vert");
-    shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment,":/default330.frag");
-    // Kompiliere und linke die Shader-Programme
-    shaderProgram.link();
+      this->fillBuffers();
 
-    glEnable(GL_DEPTH_TEST);
-    glCullFace(GL_FRONT);
-    glEnable(GL_CULL_FACE);
-    glDepthFunc(GL_LEQUAL);    
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+      // Lade die Shader-Sourcen aus externen Dateien (ggf. anpassen)
+      this->shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex,":/default330.vert");
+      this->shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment,":/default330.frag");
+      // Kompiliere und linke die Shader-Programme
+      this->shaderProgram.link();
 
-    glClearDepth(1.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+      glEnable(GL_DEPTH_TEST);
+      glCullFace(GL_BACK);
+      glEnable(GL_CULL_FACE);//Disabled by default
+      glDepthFunc(GL_LEQUAL);
+      glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+      glClearDepth(1.0f);
+      glClearColor(.0f, .0f, .0f, .0f);//Set bgColor black
+
 }
 
 void MyGLWidget::resizeGL(int width, int height){
     height = (height == 0) ? 1 : height;
 
-    //QMatrix4x4 matrix;
-    //matrix.setToIdentity();
-    //matrix.viewport(0,0,width,height);
-    //matrix.frustum(-0.05,0.05,-0.05,0.05,0.1,100.0);
-    //this->matrixStack.push(matrix);
-
     // Set viewport to cover the whole window
     glViewport(0, 0, width, height);
 
-    /*
-    // Set projection matrix to a perspective projection
-    glMatrixMode(GL_PROJECTION); //deprecated
-    glLoadIdentity(); //deprecated
-
-    glFrustum(-0.05,0.05,-0.05,0.05,0.1,100.0); //deprecated*/
 }
 
 void MyGLWidget::paintGL(){
-
     // Clear buffer to set color and alpha
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //Matrix Transformation
-    /*QMatrix4x4 matrix;
-    matrix.setToIdentity();
-    matrix.rotate(45+ this->angle*1, 1.0f,1.6f,1.0f);
-    matrix.translate(this->getCoord_x(),this->getCoord_y(), -7.0f);
-    this->matrixStack.push(matrix);*/
-
-    QMatrix4x4 matrix;
-     matrix.setToIdentity();
-     matrix.perspective(60.0, 4.0/3.0, 0.1, 1000.0);
-     matrix.translate(this->coord_x, this->coord_y, this->coord_z);
-     matrix.rotate(45.0f,0.0,0.0,1.0);
-     matrix.translate(0.0f, 0.0f, -7.0f);
-     matrix.rotate(this->angle,0.0,0.0,1.0);
-     matrix.scale(this->getZoom(),this->getZoom(),this->getZoom());
-     //matrixStack.push(matrix); // glPushMatrix
-     //matrix.translate(0.0, 0.0, 1.0) ;
-     //matrix = matrixStack.top(); // glPopMatrix
-     //matrixStack.pop();
-
-    /*
     // Apply model view transformations
-    glMatrixMode(GL_MODELVIEW); //deprecated
-    glLoadIdentity(); //deprecated
-    //--Change values here to move the cameras
-    glTranslatef(this->getCoord_x(), this->getCoord_y(), -7.0f); //deprecated
 
-    //--1.5 rotate Function
-    //deprecated
-    glRotatef(45 + this->angle*1,1.3f,1.6f,1.0f); //1 = angle, 2 = rotate x, 3 = rotate y, 4 =  rotate z
-    */
+    std :: stack<QMatrix4x4> matrixStack;
+    QMatrix4x4 matrix;
+    matrix.setToIdentity();
+    matrix.perspective(60.0, 4.0/3.0, 0.1, 1000.0) ;
+    matrix.translate(0.0f + this->coord_x, 0.0f + this->coord_y, 0.0f - 10) ;
+    matrix.rotate(this->angle,0,1,0) ;
+    //matrix.rotate(-90,1,0,0) ;
+    matrix.scale(1 + this->zoom, 1 + this->zoom, 1 + this->zoom);
+    matrixStack.push(matrix); // glPushMatrix
+    matrix.translate(0.0, 0.0, 1.0) ;
+    matrix = matrixStack.top(); // glPopMatrix
+    matrixStack.pop(); // "
 
-    //Used for zooming in and out
-    //glScalef(this->getZoom(),this->getZoom(),this->getZoom());
 
     this->shaderProgram.bind();
     this->vbo.bind();
     this->ibo.bind();
+    this->qTex->bind();
 
-    //Lokalisiere bzw definiere Schnittstelle für Eckpunkte
+    // Lokalisiere bzw. definiere die Schnittstelle für die Eckpunkte
     int attrVertices = 0;
+    attrVertices = this->shaderProgram.attributeLocation("vert"); // #version 130
 
-    //Lokalisiere bzw definiere Schnittstelle für Farben
-    //int attrColors = 1;
+    // Übergebe die Texturkoordinaten an den Shader als weiteres Attribut
+    int attrTexCoords = 2;
+    attrTexCoords = shaderProgram.attributeLocation("texCoord"); // #version 130
 
-    //Aktiviere die Verwendung der Attribute-Arrays
-    shaderProgram.enableAttributeArray(attrVertices);
-    //shaderProgram.enableAttributeArray(attrColors);
 
-    //Lokalisiere bzw. definiere Schnittstelle für die Trans-Matrix
-    //die Matrix kann direkt übergeben werden, da setUniformValue für diesen Typ überladen ist
+    // Aktiviere die Verwendung der Attribute-Arrays
+    this->shaderProgram.enableAttributeArray(attrVertices);
+    this->shaderProgram.enableAttributeArray(attrTexCoords);
+
+    // Übergebe die Textur an die Uniform-Variable
+    // Die 0 steht dabei für die verwendete Unit (0=Standard)
+    shaderProgram.setUniformValue("texture", 0);
+
+    // Lokalisiere bzw. definiere die Schnittstelle für die Transformationsmatrix
+    // Die Matrix kann direkt übergeben werden, da setUniformValue für diesen Typ
+    // überladen ist
     int unifMatrix = 0;
-    unifMatrix = shaderProgram.uniformLocation("transMatrix"); //#version 130
-    shaderProgram.setUniformValue(unifMatrix,matrix);
-    //this->matrixStack.pop();
-
-    int persMatrix = 0;
-    persMatrix = shaderProgram.uniformLocation("persMatrix"); //#version 130
-    shaderProgram.setUniformValue(persMatrix,matrix);
-    //this->matrixStack.pop();
-
-    //Fülle die Attribute Buffer mit den korrekten Daten
+    unifMatrix = this->shaderProgram.uniformLocation("matrix"); // #version 130
+    this->shaderProgram.setUniformValue(unifMatrix, matrix);
+    // Fülle die Attribute-Buffer mit den korrekten Daten
     int offset = 0;
-    int stride = 4 * sizeof(GLfloat);
-    shaderProgram.setAttributeBuffer(attrVertices,GL_FLOAT,offset,4,stride);
+    int stride = 8 * sizeof(GLfloat);
+    this->shaderProgram.setAttributeBuffer(attrVertices, GL_FLOAT, offset, 4, stride);
     offset += 4 * sizeof(GLfloat);
-    //shaderProgram.setAttributeBuffer(attrColors,GL_FLOAT,offset,4,stride);
+    shaderProgram.setAttributeBuffer(attrTexCoords, GL_FLOAT, offset, 4, stride);
 
 
     // Zeichne die 6 Elemente (Indizes) als Dreiecke
     // Die anderen Parameter verhalten sich wie oben
-    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
-    glDrawElements(GL_TRIANGLES, iboLength, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, this->iboLength, GL_UNSIGNED_INT, 0);
 
-    //Deaktiviere die Verwendung derr Attribute-Arrays
-    shaderProgram.disableAttributeArray(attrVertices);
-    //shaderProgram.disableAttributeArray(attrColors);
-    vbo.release();
-    ibo.release();
 
-    //Löse das Shader Programm
-    shaderProgram.release();
+    this->shaderProgram.disableAttributeArray(attrTexCoords);
+    this->shaderProgram.disableAttributeArray(attrVertices);
 
-    // Increment angle for rotation
-    this->angle += 0.05;
-    this->update(); //to update the widget constantly
+    this->vbo.release();
+    this->ibo.release();
+    this->qTex->release();
+
+    // Löse das Shader-Programm
+    this->shaderProgram.release();
+
+    // Increment this->counter
+    this->angle += 0.01;
+    this->update();
 }

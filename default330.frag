@@ -5,10 +5,11 @@
 // notes:
 // GL_ARB_separate_shader_objects is not needed for version >= 410
 
-layout(location = 0)in vec4 col;
+uniform sampler2D texture;
+layout(location = 1)in vec4 texC;
 layout(location = 0)out vec4 fragColor; // must be at 0
 
 void main()
 {
-    fragColor = col;
+    gl_FragColor = texture2D(texture, vec2(texC.x,texC.y));
 }

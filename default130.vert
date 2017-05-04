@@ -1,14 +1,13 @@
 #version 130
 // default130.vert: a simple vertex shader
 
-uniform mat4 transMatrix;
-uniform mat4 persMatrix;
+uniform mat4 matrix;
 attribute vec4 vert;
-attribute vec4 color;
-varying vec4 col;
+attribute vec4 texCoord;
+varying vec4 texC;
 
 void main()
 {
-    col = color;
-    gl_Position = transMatrix * vert;
+    texC = texCoord;
+    gl_Position = matrix * vert;
 }

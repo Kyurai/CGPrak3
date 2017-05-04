@@ -8,6 +8,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 #include <stack>
+#include <QOpenGLTexture>
 #include "modelloader.h"
 
 class MyGLWidget : public QOpenGLWidget
@@ -40,6 +41,8 @@ private:
 
     QOpenGLShaderProgram shaderProgram;
     std::stack<QMatrix4x4> matrixStack;
+
+    QOpenGLTexture*  qTex;
 
 public:
    MyGLWidget();
