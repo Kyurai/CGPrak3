@@ -166,80 +166,109 @@ void MyGLWidget::initializeGL(){
 
 void MyGLWidget::loadPlanets(){
     glEnable(GL_TEXTURE_2D);
+    int scaling = 50;
+    double distance = 0.1;
+
     //create Planets
-    //Planet(                       x,y,z,  texture,    angle,  sR,rA,      scale,hasMoonIndex)
-    Planet *sun =       new Planet( 0,0,0,  "sun",        0.0,  0.01,0.0,   1.0,1);
-    Planet *earth =     new Planet( 4,0,0,  "earth",      0.0,  0.01,0.01,  0.3,1);
-    Planet *moon =      new Planet( 2,0,0,  "moon",       0.0,  0.02,0.01,  0.2,0);
-    Planet *saturn =    new Planet(10,0,0,  "saturn",     0.0,  0.02,0.001, 0.6,0);
-    Planet *jupiter =   new Planet( 8,0,0,  "jupiter",    0.0,  0.02,0.005, 0.9,0);
-    Planet *neptune =   new Planet(14,0,0,  "neptune",    0.0,  0.05,0.005, 0.4,0);
-    Planet *mars =      new Planet( 6,0,0,  "mars",       0.5,  0.05,0.05,  0.001,0);
-    Planet *mercury =   new Planet(1.5,0,0, "mercury",    0.5,  0.09,0.05,  0.2,0);
-    Planet *venus =     new Planet(2.5,0,0, "venus",      0.0,  0.05,0.03,  0.4,0);
-    Planet *uranus =    new Planet(12,0,0,  "uranus",     0.0,  0.05,0.001,  0.58,0);
+    //Planet(                       x,y,z,              texture,    angle,   sR,    rA,     scale,          hasMoonIndex)
+    Planet *sun =       new Planet( 0,0,0,                "sun",        0.0,  0.001,  0.0,    1.0,              false);
+    Planet *mercury =   new Planet(41.0  *distance,0,0,   "mercury",    0.5,  0.009,  0.004,  0.0035*scaling,   false);
+    Planet *venus =     new Planet(77.0  *distance,0,0,   "venus",      0.0,  0.005,  0.002,  0.0086*scaling,   false);
+    Planet *earth =     new Planet(107.0 *distance,0,0,   "earth",     23.0,  0.008,  0.008,  0.0091*scaling,   true);
+    earth->moonIndex.resize(1);
+    earth->moonIndex.at(0) = 0;
+    Planet *mars =      new Planet(163.0 *distance,0,0,   "mars",       0.5,  0.006,  0.006,  0.0049*scaling,   true);
+    mars->moonIndex.resize(2);
+    mars->moonIndex.at(0) = 1;
+    mars->moonIndex.at(1) = 2;
+    Planet *jupiter =   new Planet(556.0 *distance,0,0,   "jupiter",    0.0,  0.005,  0.003,  0.0102*scaling,   false);
+    Planet *saturn =    new Planet(1019.0*distance,0,0,   "saturn",     0.0,  0.002,  0.001,  0.0086*scaling,   false);
+    Planet *uranus =    new Planet(2051.0*distance,0,0,   "uranus",     0.0,  0.004,  0.008,  0.0037*scaling,   false);
+    Planet *neptune =   new Planet(3213.0*distance,0,0,   "neptune",    0.0,  0.003,  0.004,  0.0035*scaling,   false);
+
+    //Create Skybox(Stars)
+    Planet *skybox =    new Planet(0,0,0,                  "sky",       0.0,  0.0,    0.0,    20000.0,          false);
+
+    //create Moons
+    Planet *moon =      new Planet(27.5  *distance,0,0,   "moon",       0.0,  0.002,  0.05,   0.009*scaling,    false);
+    Planet *phobos =    new Planet(6.7*distance,0,0,      "phobos",     0.0,  0.002,  0.05,   0.009*scaling,    false);
+    Planet *deimos =    new Planet(16.8*distance,0,0,     "deimos",     0.0,  0.003,  0.02,   0.009*scaling,    false);
+
 
     //Add to Planet Vector
-    this->planets.resize(9);
+    this->planets.resize(10);
     this->planets[0] = sun;
-    this->planets[1] = earth;
-    this->planets[2] = saturn;
-    this->planets[3] = jupiter;
-    this->planets[4] = neptune;
-    this->planets[5] = mars;
-    this->planets[6] = mercury;
-    this->planets[7] = venus;
-    this->planets[8] = uranus;
+    this->planets[1] = mercury;
+    this->planets[2] = venus;
+    this->planets[3] = earth;
+    this->planets[4] = mars;
+    this->planets[5] = jupiter;
+    this->planets[6] = saturn;
+    this->planets[7] = uranus;
+    this->planets[8] = neptune;
+    this->planets[9] = skybox;
 
-    this->moons.resize(1);
+    //Add to Moon Vector
+    this->moons.resize(3);
     this->moons[0] = moon;
+    this->moons[1] = phobos;
+    this->moons[2] = deimos;
 }
 
 void MyGLWidget::paintGL(){
     // Clear buffer to set color and alpha
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glCullFace(GL_BACK);
 
     std::stack<QMatrix4x4> matrixStack;
     QMatrix4x4 perspectiveMatrix, modelMatrix;
     modelMatrix.setToIdentity();
     perspectiveMatrix.setToIdentity();
-    perspectiveMatrix.perspective(100.0, 1.0, 0.1, 1000.0);
+    perspectiveMatrix.perspective(100.0, 1.0, 0.1, 100000.0);
     perspectiveMatrix.translate(this->coord_x, this->coord_y, this->coord_z);
     perspectiveMatrix.scale(this->zoom,this->zoom,this->zoom);
-    //perspectiveMatrix.rotate(0/*rotx*/,1.0,0.0,0.0);
-    //perspectiveMatrix.rotate(0/*roty*/,0.0,1.0,0.0);
-    //perspectiveMatrix.rotate(0/*rotz*/,0.0,1.0,0.0);
 
     //Sun
     Planet *sun = this->planets.at(0);
-    //modelMatrix.rotate(sun->_selfRotation,0,1,0);
-    render(this->planets.at(0),perspectiveMatrix,modelMatrix);
+    modelMatrix.rotate(sun->_selfRotation,0,1,0);
+    render(sun,perspectiveMatrix,modelMatrix);
     matrixStack.push(modelMatrix);
+    sun->_selfRotation += sun->_selfRotationOffset;
 
+        //Render Planets
         for(int i = 1; i < this->planets.size(); i++){
+            if(i == 9){
+                glCullFace(GL_FRONT);
+            }
             modelMatrix = matrixStack.top();
             Planet *pl = this->planets.at(i);
-            modelMatrix.rotate(pl->_rotationAround,0,1,0);
-            modelMatrix.translate(pl->_x,pl->_y, pl->_z);
-            modelMatrix.rotate(pl->_angle,0,0,1);
-            modelMatrix.rotate(pl->_selfRotation,0,1,0);
-            modelMatrix.scale(pl->_scale);
+            modelMatrix.rotate(pl->_rotationAround,0,1,0);  //Rotation around sun
+            modelMatrix.translate(pl->_x,pl->_y, pl->_z);   //Translation from sun
+            modelMatrix.rotate(pl->_angle,0,0,1);           //Angle of axis
+            modelMatrix.rotate(pl->_selfRotation,0,1,0);    //Selfrotation
+            modelMatrix.scale(pl->_scale);                  //Scale
             render(pl,perspectiveMatrix,modelMatrix);
             matrixStack.push(modelMatrix);
+
+            //Render Moons
+            if(pl->_hasMoon != false){
+                for(int j = 0; j < pl->moonIndex.size(); j++){
+                    modelMatrix = matrixStack.top();
+                    Planet *moon = this->moons.at(pl->moonIndex.at(j));
+                    modelMatrix.rotate(moon->_rotationAround,0,1,0);    //Rotation around earth
+                    modelMatrix.translate(moon->_x,moon->_y,moon->_z);  //Verschiebung im Raum
+                    modelMatrix.rotate(moon->_angle,0.0,0.0,1.0);       //Neigung
+                    modelMatrix.rotate(moon->_selfRotation,0,1,0);      //Eigenrotation
+                    modelMatrix.scale(moon->_scale);
+                    render(moon,perspectiveMatrix,modelMatrix);
+                    matrixStack.push(modelMatrix);
+                    matrixStack.pop();
+                }
+            }
             matrixStack.pop();
 
             pl->_rotationAround += pl->_rotationAroundOffset;
-            pl->_selfRotation += pl->_selfRotationOffset;
-
-            if(pl->_hasMoon != 0){
-                Planet *moon = this->moons.at(pl->_hasMoon-1);
-                modelMatrix.rotate(moon->_rotationAround,0,1,0); //Rotation around earth
-                modelMatrix.translate(moon->_x,moon->_y,moon->_z); //Verschiebung im Raum
-                modelMatrix.rotate(moon->_angle,0.0,0.0,1.0); //Neigung
-                modelMatrix.rotate(moon->_selfRotation,0,1,0); //Eigenrotation
-                modelMatrix.scale(moon->_scale);
-                render(moon,perspectiveMatrix,modelMatrix);
-            }
+            pl->_selfRotation += pl->_selfRotationOffset;         
         }
 
         /*

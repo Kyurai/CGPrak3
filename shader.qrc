@@ -17,5 +17,8 @@
         <file>sun.jpg</file>
         <file>uranus.jpg</file>
         <file>venus.jpg</file>
+        <file>sky.jpg</file>
+        <file>deimos.jpg</file>
+        <file>phobos.jpg</file>
     </qresource>
 </RCC>

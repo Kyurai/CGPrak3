@@ -4,7 +4,7 @@ Planet::Planet(){
 
 }
 
-Planet::Planet(double x, double y, double z, std::string textureName, double angle, double selfRotation, double rotationAround, double scale, int hasMoon)
+Planet::Planet(double x, double y, double z, std::string textureName, double angle, double selfRotation, double rotationAround, double scale, bool hasMoon)
 {
     this->_x = x;
     this->_y = y;
