@@ -11,6 +11,8 @@
 #include <QOpenGLTexture>
 #include "modelloader.h"
 #include <string>
+#include <vector>
+#include "planet.h"
 
 class MyGLWidget : public QOpenGLWidget
 {
@@ -19,13 +21,16 @@ private:
     double angle = 0;
     double coord_x = 0.0;
     double coord_y = 0.0;
-    double coord_z = 0.0;
+    double coord_z = -10.0;
     double zoom = 1.0f;
 
     //Key Movement
     std::string lastMov = "";
     double speed = 0.05;
 
+    //Array for storing Planet Objects
+    std::vector<Planet*> planets;
+    std::vector<Planet*> moons;
 
     QOpenGLBuffer vbo; //Vertex Buffer Object
     QOpenGLBuffer ibo; //Indices Buffer Object
@@ -59,8 +64,9 @@ public:
    void paintGL();
    void keyPressEvent(QKeyEvent *event);
    void wheelEvent(QWheelEvent *event);
-   void createGeo();
+   void loadPlanets();
    void fillBuffers();
+   void render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model);
 
    //Getter & Setter for Attributes
    void setAngle(int _angle);
