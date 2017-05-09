@@ -18,11 +18,19 @@ class MyGLWidget : public QOpenGLWidget
 {
     Q_OBJECT
 private:
+    //Perspective
     double angle = 0;
     double coord_x = 0.0;
     double coord_y = 0.0;
-    double coord_z = -10.0;
+    double coord_z = -10.0; //original : -10
     double zoom = 1.0f;
+    double rotX = 45.0;
+    double rotY = 0.0;
+    double rotZ = 0.0;
+
+    //Mouse
+    double mouseX;
+    double mouseY;
 
     //Key Movement
     std::string lastMov = "";
@@ -64,6 +72,7 @@ public:
    void paintGL();
    void keyPressEvent(QKeyEvent *event);
    void wheelEvent(QWheelEvent *event);
+   void mouseMoveEvent(QMouseEvent *event);
    void loadPlanets();
    void fillBuffers();
    void render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model);
@@ -73,6 +82,8 @@ public:
    int getAngle();
    double getCoord_x() const;
    void setCoord_x(double value);
+   double getCoord_z() const;
+   void setCoord_z(double value);
    double getCoord_y() const;
    void setCoord_y(double value);
    double getZoom() const;

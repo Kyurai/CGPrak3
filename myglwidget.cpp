@@ -16,6 +16,13 @@ void MyGLWidget::setCoord_y(double value)
 {
     coord_y = value;
 }
+double MyGLWidget::getCoord_z() const{
+    return coord_z;
+}
+void MyGLWidget::setCoord_z(double value){
+    coord_z = value;
+}
+
 double MyGLWidget::getZoom() const
 {
     return zoom;
@@ -61,51 +68,89 @@ void MyGLWidget::wheelEvent(QWheelEvent *event){
 }
 
 void MyGLWidget::keyPressEvent(QKeyEvent *event)
-{
-    //Move upwards (y)
+{       
+    double max_speed = 2.0;
+    double scaleUp = 1.05;
+
+    //double direction_X = 0.5;
+    //double direction_Y = 1.0;
+    //double direction_Z = 0.0;
+
+    //Move forward (z)
     if (event->key() == Qt::Key_W || event->key() == Qt::Key_Up) {
-        if(this->lastMov == "w"){
-           this->speed = this->speed * 1.1;
+        //this->setCoord_x(this->getCoord_x() + direction_X);
+        //this->setCoord_y(this->getCoord_y() + direction_Y);
+        //this->setCoord_z(this->getCoord_z() + direction_Z);
+
+
+        if(this->lastMov == "w" ){
+            if(this->speed < max_speed){
+                this->speed = this->speed * scaleUp;
+            }
         }
         else{
             this->speed = 0.05;
         }
-        this->setCoord_y(this->getCoord_y() + speed);
+        this->setCoord_z(this->getCoord_z() + speed);
         this->lastMov = "w";
     }
-    //Move downwards (y)
+    //Move backward (y)
     else if(event->key() == Qt::Key_S || event->key() == Qt::Key_Down){
         if(this->lastMov == "s"){
-            this->speed = this->speed * 1.1;
+            if(this->speed < max_speed){
+                this->speed = this->speed * scaleUp;
+            }
         }
         else{
             this->speed = 0.05;
         }
-        this->setCoord_y(this->getCoord_y() - speed);
+        this->setCoord_z(this->getCoord_z() - speed);
         this->lastMov = "s";
     }
     //move to the left (x)
     else if(event->key() == Qt::Key_A || event->key() == Qt::Key_Left){
         if(this->lastMov == "a"){
-            this->speed = this->speed * 1.1;
-        }
-        else{
-            this->speed = 0.05;
-        }
-        this->setCoord_x(this->getCoord_x() - speed);
-        this->lastMov = "a";
-    }
-    //move to the right (x)
-    else if(event->key() == Qt::Key_D || event->key() == Qt::Key_Right){
-        if(this->lastMov == "d"){
-            this->speed = this->speed * 1.1;
+            if(this->speed < max_speed){
+                this->speed = this->speed * scaleUp;
+            }
         }
         else{
             this->speed = 0.05;
         }
         this->setCoord_x(this->getCoord_x() + speed);
+        this->lastMov = "a";
+    }
+    //move to the right (x)
+    else if(event->key() == Qt::Key_D || event->key() == Qt::Key_Right){
+        if(this->lastMov == "d"){
+            if(this->speed < max_speed){
+                this->speed = this->speed * scaleUp;
+            }
+        }
+        else{
+            this->speed = 0.05;
+        }
+        this->setCoord_x(this->getCoord_x() - speed);
         this->lastMov = "d";
     }
+}
+
+void MyGLWidget::mouseMoveEvent(QMouseEvent *event){
+    if ((event->x() - this->mouseX) > 0){		// mouse moved to the right
+         this->rotY += 1.0f;
+    }
+     else if ((event->x() - this->mouseX) < 0){	// mouse moved to the left
+         this->rotY -= 1.0f;
+    }
+    this->mouseX = event->x();
+
+    if((event->y() - this->mouseY) > 0){ //mouse moved down
+        this->rotX += 1.0f;
+    }
+    else if((event->y() - this->mouseY) < 0){ //mouse moved up
+        this->rotX -= 1.0f;
+    }
+    this->mouseY = event->y();
 }
 
 void MyGLWidget::resizeGL(int width, int height){
@@ -162,6 +207,9 @@ void MyGLWidget::initializeGL(){
       glClearDepth(1.0f);
       glClearColor(.0f, .0f, .0f, .0f);//Set bgColor black
 
+      QPoint p = this->mapFromGlobal(QCursor::pos());
+      this->mouseX = p.x();
+      this->mouseY = p.y();
 }
 
 void MyGLWidget::loadPlanets(){
@@ -170,29 +218,29 @@ void MyGLWidget::loadPlanets(){
     double distance = 0.1;
 
     //create Planets
-    //Planet(                       x,y,z,              texture,    angle,   sR,    rA,     scale,          hasMoonIndex)
+    //Planet(                       x,y,z,                texture,     angle,  sR,     rA,    scale,          hasMoonIndex)
     Planet *sun =       new Planet( 0,0,0,                "sun",        0.0,  0.001,  0.0,    1.0,              false);
-    Planet *mercury =   new Planet(41.0  *distance,0,0,   "mercury",    0.5,  0.009,  0.004,  0.0035*scaling,   false);
-    Planet *venus =     new Planet(77.0  *distance,0,0,   "venus",      0.0,  0.005,  0.002,  0.0086*scaling,   false);
-    Planet *earth =     new Planet(107.0 *distance,0,0,   "earth",     23.0,  0.008,  0.008,  0.0091*scaling,   true);
+    Planet *mercury =   new Planet(41.0  *distance,0,0,   "mercury",    0.5,  0.009,  0.04,  0.0035*scaling,   false);
+    Planet *venus =     new Planet(77.0  *distance,0,0,   "venus",      0.0,  0.005,  0.02,  0.0086*scaling,   false);
+    Planet *earth =     new Planet(107.0 *distance,0,0,   "earth",     23.0,  0.008,  0.08,  0.0091*scaling,   true);
     earth->moonIndex.resize(1);
     earth->moonIndex.at(0) = 0;
-    Planet *mars =      new Planet(163.0 *distance,0,0,   "mars",       0.5,  0.006,  0.006,  0.0049*scaling,   true);
+    Planet *mars =      new Planet(163.0 *distance,0,0,   "mars",       0.5,  0.006,  0.06,  0.0049*scaling,   true);
     mars->moonIndex.resize(2);
     mars->moonIndex.at(0) = 1;
     mars->moonIndex.at(1) = 2;
-    Planet *jupiter =   new Planet(556.0 *distance,0,0,   "jupiter",    0.0,  0.005,  0.003,  0.0102*scaling,   false);
-    Planet *saturn =    new Planet(1019.0*distance,0,0,   "saturn",     0.0,  0.002,  0.001,  0.0086*scaling,   false);
-    Planet *uranus =    new Planet(2051.0*distance,0,0,   "uranus",     0.0,  0.004,  0.008,  0.0037*scaling,   false);
-    Planet *neptune =   new Planet(3213.0*distance,0,0,   "neptune",    0.0,  0.003,  0.004,  0.0035*scaling,   false);
+    Planet *jupiter =   new Planet(556.0 *distance,0,0,   "jupiter",    0.0,  0.005,  0.03,  0.0102*scaling,   false);
+    Planet *saturn =    new Planet(1019.0*distance,0,0,   "saturn",     0.0,  0.002,  0.01,  0.0086*scaling,   false);
+    Planet *uranus =    new Planet(2051.0*distance,0,0,   "uranus",     0.0,  0.004,  0.08,  0.0037*scaling,   false);
+    Planet *neptune =   new Planet(3213.0*distance,0,0,   "neptune",    0.0,  0.003,  0.04,  0.0035*scaling,   false);
 
     //Create Skybox(Stars)
-    Planet *skybox =    new Planet(0,0,0,                  "sky",       0.0,  0.0,    0.0,    20000.0,          false);
+    Planet *skybox =    new Planet(0,0,0,                  "sky",       0.0,  0.001,  0.0,    20000.0,          false);
 
     //create Moons
-    Planet *moon =      new Planet(27.5  *distance,0,0,   "moon",       0.0,  0.002,  0.05,   0.009*scaling,    false);
-    Planet *phobos =    new Planet(6.7*distance,0,0,      "phobos",     0.0,  0.002,  0.05,   0.009*scaling,    false);
-    Planet *deimos =    new Planet(16.8*distance,0,0,     "deimos",     0.0,  0.003,  0.02,   0.009*scaling,    false);
+    Planet *moon =      new Planet(27.5 *distance,0,0,     "moon",      0.0,  0.002,  0.5,   0.005*scaling,     false);
+    Planet *phobos =    new Planet(6.7*distance,0,0,      "phobos",     0.0,  0.002,  0.3,   0.0018*scaling,    false);
+    Planet *deimos =    new Planet(16.8*distance,0,0,     "deimos",     0.0,  0.003,  0.2,   0.0012*scaling,    false);
 
 
     //Add to Planet Vector
@@ -224,19 +272,23 @@ void MyGLWidget::paintGL(){
     QMatrix4x4 perspectiveMatrix, modelMatrix;
     modelMatrix.setToIdentity();
     perspectiveMatrix.setToIdentity();
-    perspectiveMatrix.perspective(100.0, 1.0, 0.1, 100000.0);
+    perspectiveMatrix.perspective(100.0, 1, 0.01, 100000.0);
     perspectiveMatrix.translate(this->coord_x, this->coord_y, this->coord_z);
+    perspectiveMatrix.rotate(this->rotX,1,0,0);
+    perspectiveMatrix.rotate(this->rotY,0,1,0);
+    perspectiveMatrix.rotate(this->rotZ,0,0,1);
     perspectiveMatrix.scale(this->zoom,this->zoom,this->zoom);
+    //Bug: Camera is rotating around sun !
 
     //Sun
     Planet *sun = this->planets.at(0);
-    modelMatrix.rotate(sun->_selfRotation,0,1,0);
+    //modelMatrix.rotate(sun->_selfRotation,0,1,0);
     render(sun,perspectiveMatrix,modelMatrix);
     matrixStack.push(modelMatrix);
     sun->_selfRotation += sun->_selfRotationOffset;
 
         //Render Planets
-        for(int i = 1; i < this->planets.size(); i++){
+        for(unsigned int i = 1; i < this->planets.size(); i++){
             if(i == 9){
                 glCullFace(GL_FRONT);
             }
@@ -245,24 +297,30 @@ void MyGLWidget::paintGL(){
             modelMatrix.rotate(pl->_rotationAround,0,1,0);  //Rotation around sun
             modelMatrix.translate(pl->_x,pl->_y, pl->_z);   //Translation from sun
             modelMatrix.rotate(pl->_angle,0,0,1);           //Angle of axis
+
+            matrixStack.push(modelMatrix);
+
             modelMatrix.rotate(pl->_selfRotation,0,1,0);    //Selfrotation
             modelMatrix.scale(pl->_scale);                  //Scale
             render(pl,perspectiveMatrix,modelMatrix);
-            matrixStack.push(modelMatrix);
+            //matrixStack.push(modelMatrix);
 
             //Render Moons
+            //Bug: Moon not rotating and also not orbiting !
             if(pl->_hasMoon != false){
-                for(int j = 0; j < pl->moonIndex.size(); j++){
+                for(unsigned int j = 0; j < pl->moonIndex.size(); j++){
                     modelMatrix = matrixStack.top();
                     Planet *moon = this->moons.at(pl->moonIndex.at(j));
-                    modelMatrix.rotate(moon->_rotationAround,0,1,0);    //Rotation around earth
+                    modelMatrix.rotate(moon->_rotationAround,0,1,0);    //Rotation around planet
                     modelMatrix.translate(moon->_x,moon->_y,moon->_z);  //Verschiebung im Raum
                     modelMatrix.rotate(moon->_angle,0.0,0.0,1.0);       //Neigung
                     modelMatrix.rotate(moon->_selfRotation,0,1,0);      //Eigenrotation
                     modelMatrix.scale(moon->_scale);
                     render(moon,perspectiveMatrix,modelMatrix);
-                    matrixStack.push(modelMatrix);
-                    matrixStack.pop();
+                    //matrixStack.push(modelMatrix);
+                    //matrixStack.pop();
+                    moon->_rotationAround += moon->_rotationAroundOffset;
+                    moon->_selfRotation += pl->_selfRotationOffset;
                 }
             }
             matrixStack.pop();
@@ -271,88 +329,7 @@ void MyGLWidget::paintGL(){
             pl->_selfRotation += pl->_selfRotationOffset;         
         }
 
-        /*
-        //Saturn
-        modelMatrix = matrixStack.top();
-        Planet *saturn = this->planets.at(3);
-        //modelMatrix.rotate(saturn->_rotationAround,0,1,0);
-        modelMatrix.translate(saturn->_x,saturn->_y, saturn->_z);
-        modelMatrix.rotate(saturn->_angle,0,0,1);
-        modelMatrix.rotate(saturn->_selfRotation,0,1,0);
-        modelMatrix.scale(saturn->_scale);
-        render(saturn,perspectiveMatrix,modelMatrix);
-        matrixStack.push(modelMatrix);
-        matrixStack.pop();
-
-        //Jupiter
-        modelMatrix = matrixStack.top();
-        Planet *jupiter = this->planets.at(4);
-        //modelMatrix.rotate(jupiter->_rotationAround,0,1,0);
-        modelMatrix.translate(jupiter->_x,jupiter->_y, jupiter->_z);
-        modelMatrix.rotate(jupiter->_angle,0,0,1);
-        modelMatrix.rotate(jupiter->_selfRotation,0,1,0);
-        modelMatrix.scale(jupiter->_scale);
-        render(jupiter,perspectiveMatrix,modelMatrix);
-        matrixStack.push(modelMatrix);
-        matrixStack.pop();
-
-        //Neptune
-        modelMatrix = matrixStack.top();
-        Planet *neptune = this->planets.at(5);
-        //modelMatrix.rotate(neptune->_rotationAround,0,1,0);
-        modelMatrix.translate(neptune->_x,neptune->_y, neptune->_z);
-        modelMatrix.rotate(neptune->_angle,0,0,1);
-        modelMatrix.rotate(neptune->_selfRotation,0,1,0);
-        modelMatrix.scale(neptune->_scale);
-        render(neptune,perspectiveMatrix,modelMatrix);
-        matrixStack.push(modelMatrix);
-        matrixStack.pop();
-
-        //Mars
-        modelMatrix = matrixStack.top();
-        Planet *mars = this->planets.at(6);
-        //modelMatrix.rotate(mars->_rotationAround,0,1,0);
-        modelMatrix.translate(mars->_x,mars->_y, mars->_z);
-        modelMatrix.rotate(mars->_angle,0,0,1);
-        modelMatrix.rotate(mars->_selfRotation,0,1,0);
-        modelMatrix.scale(mars->_scale);
-        render(mars,perspectiveMatrix,modelMatrix);
-        matrixStack.push(modelMatrix);
-        matrixStack.pop();
-
-        //Mercury
-        modelMatrix = matrixStack.top();
-        Planet *mercury = this->planets.at(7);
-        //modelMatrix.rotate(mercury->_rotationAround,0,1,0);
-        modelMatrix.translate(mercury->_x,mercury->_y, mercury->_z);
-        modelMatrix.rotate(mercury->_angle,0,0,1);
-        modelMatrix.rotate(mercury->_selfRotation,0,1,0);
-        modelMatrix.scale(mercury->_scale);
-        render(mercury,perspectiveMatrix,modelMatrix);
-        matrixStack.push(modelMatrix);
-        matrixStack.pop();
-
-        //Earth
-        modelMatrix = matrixStack.top();
-        Planet *earth = this->planets.at(1);
-        //modelMatrix.rotate(earth->_rotationAround,0,1,0); //Rotation around sun
-        modelMatrix.translate(earth->_x,earth->_y,earth->_z); //Verschiebung im Raum
-        modelMatrix.rotate(-23.44f,0.0,0.0,1.0); //Neigung
-        matrixStack.push(modelMatrix);
-            modelMatrix.rotate(earth->_selfRotation,0,1,0); //Eigenrotation
-            modelMatrix.scale(earth->_scale); //Skalierung
-            render(earth,perspectiveMatrix,modelMatrix);
-
-            //Moon
-            Planet *moon = this->planets.at(2);
-            modelMatrix.rotate(moon->_rotationAround,0,1,0); //Rotation around earth
-            modelMatrix.translate(moon->_x,moon->_y,moon->_z); //Verschiebung im Raum
-            modelMatrix.rotate(6.68,0.0,0.0,1.0); //Neigung
-            modelMatrix.rotate(moon->_selfRotation,0,1,0); //Eigenrotation
-            modelMatrix.scale(moon->_scale);
-            render(moon,perspectiveMatrix,modelMatrix); */
-
-        this->update();
+       // this->update();
 }
 
 void MyGLWidget::render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model){
