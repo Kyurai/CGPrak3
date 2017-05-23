@@ -224,20 +224,20 @@ void MyGLWidget::loadPlanets(){
 
     //create Planets
     //Planet(                       x,y,z,               shader,           texture,     angle,  sR,     rA,    scale,          hasMoonIndex)
-    Planet *sun =       new Planet( 0,0,0,               this->sunShader ,  "sun",        0.0,  0.001,  0.0,    1.0,              false);
-    Planet *mercury =   new Planet(41.0  *distance,0,0,  this->phongShader, "mercury",    0.5,  0.009,  0.04,  0.0035*scaling,   false);
-    Planet *venus =     new Planet(77.0  *distance,0,0,  this->phongShader, "venus",      0.0,  0.005,  0.02,  0.0086*scaling,   false);
-    Planet *earth =     new Planet(107.0 *distance,0,0,  this->phongShader, "earth",      23.0,  0.008,  0.08,  0.0091*scaling,   true);
+    Planet *sun =       new Planet( 0,0,0,               this->sunShader ,  "sun",        0.0,  0.001,  0.0,   1.0,               false);
+    Planet *mercury =   new Planet(41.0  *distance,0,0,  this->phongShader, "mercury",    0.5,  0.009,  0.04,  0.0035*scaling,    false);
+    Planet *venus =     new Planet(77.0  *distance,0,0,  this->phongShader, "venus",      0.0,  0.005,  0.02,  0.0086*scaling,    false);
+    Planet *earth =     new Planet(107.0 *distance,0,0,  this->phongShader, "earth",      23.0, 0.08,   0.08,  0.0091*scaling,    true);
     earth->moonIndex.resize(1);
     earth->moonIndex.at(0) = 0;
-    Planet *mars =      new Planet(163.0 *distance,0,0,  this->phongShader, "mars",       0.5,  0.006,  0.06,  0.0049*scaling,   true);
+    Planet *mars =      new Planet(163.0 *distance,0,0,  this->phongShader, "mars",       0.5,  0.006,  0.06,  0.0049*scaling,    true);
     mars->moonIndex.resize(2);
     mars->moonIndex.at(0) = 1;
     mars->moonIndex.at(1) = 2;
-    Planet *jupiter =   new Planet(556.0 *distance,0,0,  this->phongShader, "jupiter",    0.0,  0.005,  0.03,  0.0102*scaling,   false);
-    Planet *saturn =    new Planet(1019.0*distance,0,0,  this->phongShader, "saturn",     0.0,  0.002,  0.01,  0.0086*scaling,   false);
-    Planet *uranus =    new Planet(2051.0*distance,0,0,  this->phongShader, "uranus",     0.0,  0.004,  0.08,  0.0037*scaling,   false);
-    Planet *neptune =   new Planet(3213.0*distance,0,0,  this->phongShader, "neptune",    0.0,  0.003,  0.04,  0.0035*scaling,   false);
+    Planet *jupiter =   new Planet(556.0 *distance,0,0,  this->phongShader, "jupiter",    0.0,  0.005,  0.03,  0.0102*scaling,    false);
+    Planet *saturn =    new Planet(1019.0*distance,0,0,  this->phongShader, "saturn",     0.0,  0.002,  0.01,  0.0086*scaling,    false);
+    Planet *uranus =    new Planet(2051.0*distance,0,0,  this->phongShader, "uranus",     0.0,  0.004,  0.08,  0.0037*scaling,    false);
+    Planet *neptune =   new Planet(3213.0*distance,0,0,  this->phongShader, "neptune",    0.0,  0.003,  0.04,  0.0035*scaling,    false);
 
     //Create Skybox(Stars)
     Planet *skybox =    new Planet(0,0,0,                 this->default130,   "sky",      0.0,  0.001,  0.0,   20000.0,           false);
@@ -303,13 +303,10 @@ void MyGLWidget::paintGL(){
             modelMatrix.rotate(pl->_rotationAround,0,1,0);  //Rotation around sun
             modelMatrix.translate(pl->_x,pl->_y, pl->_z);   //Translation from sun
             modelMatrix.rotate(pl->_angle,0,0,1);           //Angle of axis
-
             matrixStack.push(modelMatrix);
-
             modelMatrix.rotate(pl->_selfRotation,0,1,0);    //Selfrotation
             modelMatrix.scale(pl->_scale);                  //Scale
             render(pl,perspectiveMatrix,modelMatrix,viewMatrix);
-            //matrixStack.push(modelMatrix);
 
             //Render Moons
             if(pl->_hasMoon != false){
@@ -322,8 +319,6 @@ void MyGLWidget::paintGL(){
                     modelMatrix.rotate(moon->_selfRotation,0,1,0);      //Eigenrotation
                     modelMatrix.scale(moon->_scale);
                     render(moon,perspectiveMatrix,modelMatrix,viewMatrix);
-                    //matrixStack.push(modelMatrix);
-                    //matrixStack.pop();
                     moon->_rotationAround += moon->_rotationAroundOffset;
                     moon->_selfRotation += pl->_selfRotationOffset;
                 }
@@ -334,7 +329,7 @@ void MyGLWidget::paintGL(){
             pl->_selfRotation += pl->_selfRotationOffset;         
         }
 
-        this->time += 0.02f;
+        this->time += 0.0002f;
 }
 
 void MyGLWidget::createShaders(){
@@ -395,6 +390,7 @@ void MyGLWidget::render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model
         planet->shaderProgram->setUniformValue("distortionTex",1);
     }
 
+    //Uniforms
     int unifMatrix = 0;
     unifMatrix = planet->shaderProgram->uniformLocation("modelMatrix");
     planet->shaderProgram->setUniformValue(unifMatrix, model);

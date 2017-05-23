@@ -19,11 +19,11 @@
         <file>neptune.jpg</file>
         <file>pluto.jpg</file>
         <file>saturn.jpg</file>
-        <file>sun.jpg</file>
         <file>uranus.jpg</file>
         <file>venus.jpg</file>
         <file>sky.jpg</file>
         <file>deimos.jpg</file>
         <file>phobos.jpg</file>
+        <file>sun.jpg</file>
     </qresource>
 </RCC>
