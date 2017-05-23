@@ -1,20 +1,25 @@
 #version 130
-// default130. vert : a simple vertex shader
+
 attribute vec4 vert;
 attribute vec4 texCoord;
 attribute vec4 normCoord;
+
 uniform mat4 modelMatrix;
 uniform mat4 perspectiveMatrix;
 uniform mat4 viewMatrix;
-//attribute vec4 color;
-//varying vec4 col;
+uniform mat3 normalMatrix;
+
 varying vec4 texC;
 varying vec4 norC;
+
+varying vec3 normal;
+varying vec3 position;
+
 void main()
 {
-
-    //col = vec4(1.0f,0.0f, 0.0f, 1.0f);
     texC = texCoord;
     norC = normCoord;
+    normal = normalize(normalMatrix * normCoord.xyz);
+    position = vec3(modelMatrix * vert);
     gl_Position = perspectiveMatrix * viewMatrix * modelMatrix * vert;
 }

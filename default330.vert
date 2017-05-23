@@ -8,14 +8,18 @@
 
 uniform mat4 matrix;
 uniform mat4 perspectiveMatrix;
+uniform mat4 viewMatrix;
 layout(location = 0)in vec4 vert;
 layout(location = 3)in vec4 texCoord;
+layout(location = 4)in vec4 normCoord;
 layout(location = 1)out vec4 texC;
+layout(location = 2)out vec4 norC;
 
 
 
 void main()
 {
     texC = texCoord;
-    gl_Position = (perspectiveMatrix*matrix) * vert;
+    norC = normCoord;
+    gl_Position = perspectiveMatrix*viewMatrix*matrix * vert;
 }

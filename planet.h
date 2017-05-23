@@ -4,6 +4,7 @@
 #include <QOpenGLTexture>
 #include <QMatrix4x4>
 #include <string>
+#include <QOpenGLShaderProgram>
 
 class Planet
 {
@@ -20,9 +21,13 @@ public:
     bool _hasMoon = 0;
     std::vector<int> moonIndex;
     QOpenGLTexture* _texture;
+    QOpenGLTexture* distortionTex;
+    QOpenGLShaderProgram *shaderProgram;
+    std::string planetName;
+
 
     Planet();
-    Planet(double x, double y, double z, std::string textureName, double angle, double selfRotation,double rotationAround, double scale, bool hasMoon = false);
+    Planet(double x, double y, double z,QOpenGLShaderProgram *shader, std::string textureName, double angle, double selfRotation,double rotationAround, double scale, bool hasMoon = false);
 };
 
 #endif // PLANET_H

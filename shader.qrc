@@ -4,6 +4,11 @@
         <file>default130.vert</file>
         <file>default330.frag</file>
         <file>default330.vert</file>
+        <file>phong.vert</file>
+        <file>phong.frag</file>
+        <file>normal.vert</file>
+        <file>normal.frag</file>
+        <file>sun.frag</file>
     </qresource>
     <qresource prefix="/textures">
         <file>earth.jpg</file>

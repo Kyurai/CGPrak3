@@ -154,6 +154,7 @@ void MyGLWidget::mouseMoveEvent(QMouseEvent *event){
 }
 
 void MyGLWidget::resizeGL(int width, int height){
+
     height = (height == 0) ? 1 : height;
     // Set viewport to cover the whole window
     glViewport(0, 0, width, height);
@@ -164,40 +165,44 @@ void MyGLWidget::fillBuffers(){
     bool res = model.loadObjectFromFile("/home/dustin/Documents/CG_Prakt/Praktikum3/models/sphere_high.obj");
     // Wenn erfolgreich, generiere VBO und Index-Array
     if (res) {
-      // Frage zu erwartende Array-Längen ab
-      vboLength = model.lengthOfVBO(0,false,true);
-      iboLength = model.lengthOfIndexArray();
-      // Generiere VBO und Index-Array
-      vboData = new GLfloat[vboLength];
-      indexData = new GLuint[iboLength];
-      model.genVBO(vboData,0,false,true);
-      model.genIndexArray(indexData);
-    }
-    else {
-        std::cout << "model nicht geladen..." << std::endl;
-    }
-    vbo.create();
-    vbo.bind();
-    vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    vbo.allocate(vboData, sizeof(GLfloat) * vboLength);
-    vbo.release();
+       if(model.hasTextureCoordinates()){
+           this->hasTexCoord = true;
+           vboLength = model.lengthOfVBO(0,true,true);
+           iboLength = model.lengthOfIndexArray();
+           vboData = new GLfloat[vboLength];
+           indexData = new GLuint[iboLength];
+           model.genVBO(vboData,0,true,true);
+           model.genIndexArray(indexData);
+           }
+           else{
+           this->hasTexCoord = false;
+           vboLength = model.lengthOfVBO(0,true,false);
+           iboLength = model.lengthOfIndexArray();
+           vboData = new GLfloat[vboLength];
+           indexData = new GLuint[iboLength];
+           model.genVBO(vboData,0,true,false);
+           model.genIndexArray(indexData);
+           }
+       }
+       else {}
 
-    ibo.create();
-    ibo.bind();
-    ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    ibo.allocate(indexData, sizeof(GLuint) * iboLength);
-    ibo.release();
+       vbo.create();
+       vbo.bind();
+       vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+       vbo.allocate(vboData, sizeof(GLfloat) * vboLength);
+       vbo.release();
+
+       ibo.create();
+       ibo.bind();
+       ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+       ibo.allocate(indexData, sizeof(GLuint) * iboLength);
+       ibo.release();
 }
 
 void MyGLWidget::initializeGL(){
+      this->createShaders(); //Initialisieren der Shader
       this->fillBuffers();
       this->loadPlanets();
-
-      // Lade die Shader-Sourcen aus externen Dateien (ggf. anpassen)
-      this->shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex,":/shader/default330.vert");
-      this->shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment,":/shader/default330.frag");
-      // Kompiliere und linke die Shader-Programme
-      this->shaderProgram.link();
 
       glEnable(GL_DEPTH_TEST);
       glCullFace(GL_BACK);
@@ -218,29 +223,29 @@ void MyGLWidget::loadPlanets(){
     double distance = 0.1;
 
     //create Planets
-    //Planet(                       x,y,z,                texture,     angle,  sR,     rA,    scale,          hasMoonIndex)
-    Planet *sun =       new Planet( 0,0,0,                "sun",        0.0,  0.001,  0.0,    1.0,              false);
-    Planet *mercury =   new Planet(41.0  *distance,0,0,   "mercury",    0.5,  0.009,  0.04,  0.0035*scaling,   false);
-    Planet *venus =     new Planet(77.0  *distance,0,0,   "venus",      0.0,  0.005,  0.02,  0.0086*scaling,   false);
-    Planet *earth =     new Planet(107.0 *distance,0,0,   "earth",     23.0,  0.008,  0.08,  0.0091*scaling,   true);
+    //Planet(                       x,y,z,               shader,           texture,     angle,  sR,     rA,    scale,          hasMoonIndex)
+    Planet *sun =       new Planet( 0,0,0,               this->sunShader ,  "sun",        0.0,  0.001,  0.0,    1.0,              false);
+    Planet *mercury =   new Planet(41.0  *distance,0,0,  this->phongShader, "mercury",    0.5,  0.009,  0.04,  0.0035*scaling,   false);
+    Planet *venus =     new Planet(77.0  *distance,0,0,  this->phongShader, "venus",      0.0,  0.005,  0.02,  0.0086*scaling,   false);
+    Planet *earth =     new Planet(107.0 *distance,0,0,  this->phongShader, "earth",      23.0,  0.008,  0.08,  0.0091*scaling,   true);
     earth->moonIndex.resize(1);
     earth->moonIndex.at(0) = 0;
-    Planet *mars =      new Planet(163.0 *distance,0,0,   "mars",       0.5,  0.006,  0.06,  0.0049*scaling,   true);
+    Planet *mars =      new Planet(163.0 *distance,0,0,  this->phongShader, "mars",       0.5,  0.006,  0.06,  0.0049*scaling,   true);
     mars->moonIndex.resize(2);
     mars->moonIndex.at(0) = 1;
     mars->moonIndex.at(1) = 2;
-    Planet *jupiter =   new Planet(556.0 *distance,0,0,   "jupiter",    0.0,  0.005,  0.03,  0.0102*scaling,   false);
-    Planet *saturn =    new Planet(1019.0*distance,0,0,   "saturn",     0.0,  0.002,  0.01,  0.0086*scaling,   false);
-    Planet *uranus =    new Planet(2051.0*distance,0,0,   "uranus",     0.0,  0.004,  0.08,  0.0037*scaling,   false);
-    Planet *neptune =   new Planet(3213.0*distance,0,0,   "neptune",    0.0,  0.003,  0.04,  0.0035*scaling,   false);
+    Planet *jupiter =   new Planet(556.0 *distance,0,0,  this->phongShader, "jupiter",    0.0,  0.005,  0.03,  0.0102*scaling,   false);
+    Planet *saturn =    new Planet(1019.0*distance,0,0,  this->phongShader, "saturn",     0.0,  0.002,  0.01,  0.0086*scaling,   false);
+    Planet *uranus =    new Planet(2051.0*distance,0,0,  this->phongShader, "uranus",     0.0,  0.004,  0.08,  0.0037*scaling,   false);
+    Planet *neptune =   new Planet(3213.0*distance,0,0,  this->phongShader, "neptune",    0.0,  0.003,  0.04,  0.0035*scaling,   false);
 
     //Create Skybox(Stars)
-    Planet *skybox =    new Planet(0,0,0,                  "sky",       0.0,  0.001,  0.0,    20000.0,          false);
+    Planet *skybox =    new Planet(0,0,0,                 this->default130,   "sky",      0.0,  0.001,  0.0,   20000.0,           false);
 
     //create Moons
-    Planet *moon =      new Planet(27.5 *distance,0,0,     "moon",      0.0,  0.002,  0.5,   0.005*scaling,     false);
-    Planet *phobos =    new Planet(6.7*distance,0,0,      "phobos",     0.0,  0.002,  0.3,   0.0018*scaling,    false);
-    Planet *deimos =    new Planet(16.8*distance,0,0,     "deimos",     0.0,  0.003,  0.2,   0.0012*scaling,    false);
+    Planet *moon =      new Planet(27.5 *distance,0,0,    this->phongShader, "moon",      0.0,  0.002,  0.5,   0.005*scaling,     false);
+    Planet *phobos =    new Planet(6.7*distance,0,0,      this->phongShader,"phobos",     0.0,  0.002,  0.3,   0.0018*scaling,    false);
+    Planet *deimos =    new Planet(16.8*distance,0,0,     this->phongShader,"deimos",     0.0,  0.003,  0.2,   0.0012*scaling,    false);
 
 
     //Add to Planet Vector
@@ -269,21 +274,22 @@ void MyGLWidget::paintGL(){
     glCullFace(GL_BACK);
 
     std::stack<QMatrix4x4> matrixStack;
-    QMatrix4x4 perspectiveMatrix, modelMatrix;
+    QMatrix4x4 perspectiveMatrix, modelMatrix, viewMatrix;
     modelMatrix.setToIdentity();
     perspectiveMatrix.setToIdentity();
-    perspectiveMatrix.perspective(100.0, 1, 0.01, 100000.0);
-    perspectiveMatrix.translate(this->coord_x, this->coord_y, this->coord_z);
-    perspectiveMatrix.rotate(this->rotX,1,0,0);
-    perspectiveMatrix.rotate(this->rotY,0,1,0);
-    perspectiveMatrix.rotate(this->rotZ,0,0,1);
-    perspectiveMatrix.scale(this->zoom,this->zoom,this->zoom);
-    //Bug: Camera is rotating around sun !
+    perspectiveMatrix.perspective(100.0, 4/3, 0.01, 100000.0);
+
+    viewMatrix.setToIdentity();
+    viewMatrix.translate(this->coord_x,this->coord_y,this->coord_z);
+    viewMatrix.rotate(this->rotX,1.0,0.0,0.0);
+    viewMatrix.rotate(this->rotY,0.0,1.0,0.0);
+    viewMatrix.rotate(this->rotZ,0.0,1.0,0.0);
+    viewMatrix.scale(this->zoom,this->zoom,this->zoom);
 
     //Sun
     Planet *sun = this->planets.at(0);
     //modelMatrix.rotate(sun->_selfRotation,0,1,0);
-    render(sun,perspectiveMatrix,modelMatrix);
+    render(sun,perspectiveMatrix,modelMatrix, viewMatrix);
     matrixStack.push(modelMatrix);
     sun->_selfRotation += sun->_selfRotationOffset;
 
@@ -302,11 +308,10 @@ void MyGLWidget::paintGL(){
 
             modelMatrix.rotate(pl->_selfRotation,0,1,0);    //Selfrotation
             modelMatrix.scale(pl->_scale);                  //Scale
-            render(pl,perspectiveMatrix,modelMatrix);
+            render(pl,perspectiveMatrix,modelMatrix,viewMatrix);
             //matrixStack.push(modelMatrix);
 
             //Render Moons
-            //Bug: Moon not rotating and also not orbiting !
             if(pl->_hasMoon != false){
                 for(unsigned int j = 0; j < pl->moonIndex.size(); j++){
                     modelMatrix = matrixStack.top();
@@ -316,7 +321,7 @@ void MyGLWidget::paintGL(){
                     modelMatrix.rotate(moon->_angle,0.0,0.0,1.0);       //Neigung
                     modelMatrix.rotate(moon->_selfRotation,0,1,0);      //Eigenrotation
                     modelMatrix.scale(moon->_scale);
-                    render(moon,perspectiveMatrix,modelMatrix);
+                    render(moon,perspectiveMatrix,modelMatrix,viewMatrix);
                     //matrixStack.push(modelMatrix);
                     //matrixStack.pop();
                     moon->_rotationAround += moon->_rotationAroundOffset;
@@ -329,56 +334,133 @@ void MyGLWidget::paintGL(){
             pl->_selfRotation += pl->_selfRotationOffset;         
         }
 
-       // this->update();
+        this->time += 0.02f;
 }
 
-void MyGLWidget::render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model){
-    this->shaderProgram.bind();
+void MyGLWidget::createShaders(){
+
+    default130 = new QOpenGLShaderProgram();
+    default130->addShaderFromSourceFile(QOpenGLShader::Vertex,":shader/default130.vert");
+    default130->addShaderFromSourceFile(QOpenGLShader::Fragment,":shader/default130.frag");
+    default130->link();
+
+    normal = new QOpenGLShaderProgram();
+    normal->addShaderFromSourceFile(QOpenGLShader::Vertex,":shader/normal.vert");
+    normal->addShaderFromSourceFile(QOpenGLShader::Fragment,":shader/normal.frag");
+    normal->link();
+
+    sunShader = new QOpenGLShaderProgram();
+    sunShader->addShaderFromSourceFile(QOpenGLShader::Vertex,":shader/default130.vert");
+    sunShader->addShaderFromSourceFile(QOpenGLShader::Fragment,":shader/sun.frag");
+    sunShader->link();
+
+    phongShader = new QOpenGLShaderProgram();
+    phongShader->addShaderFromSourceFile(QOpenGLShader::Vertex,":shader/phong.vert");
+    phongShader->addShaderFromSourceFile(QOpenGLShader::Fragment,":shader/phong.frag");
+    phongShader->link();
+}
+
+void MyGLWidget::render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model, QMatrix4x4 view){
+
+    QMatrix3x3 n = model.normalMatrix();
+    QVector4D lightPosition(1.0,1.0,1.0,1.0);
+    QVector3D lightIntensity(1.0,1.0,1.0);
+    QVector3D kd(1.0,1.0,1.0);
+    QVector3D ka(0.1,0.1,0.1);
+    QVector3D ks(1.0,1.0,1.0);
+    float shininess = 32.0;
+
+    planet->shaderProgram->bind();
     this->vbo.bind();
     this->ibo.bind();
 
     // Lokalisiere bzw. definiere die Schnittstelle für die Eckpunkte
     int attrVertices = 0;
-    attrVertices = this->shaderProgram.attributeLocation("vert"); // #version 130
-    // Übergebe die Texturkoordinaten an den Shader als weiteres Attribut
-    int attrTexCoords = 2;
-    attrTexCoords = shaderProgram.attributeLocation("texCoord"); // #version 130
+    attrVertices = planet->shaderProgram->attributeLocation("vert"); // #version 130
+    int attrTexCoords = 1;
+    attrTexCoords = planet->shaderProgram->attributeLocation("texCoord"); // #version 130
+    int attrNorCoords = 2;
+    attrNorCoords = planet->shaderProgram->attributeLocation("normCoord"); //anpassen der Location !!!!
 
     // Aktiviere die Verwendung der Attribute-Arrays
-    this->shaderProgram.enableAttributeArray(attrVertices);
-    this->shaderProgram.enableAttributeArray(attrTexCoords);
+    planet->shaderProgram->enableAttributeArray(attrVertices);
+    planet->shaderProgram->enableAttributeArray(attrTexCoords);
+    planet->shaderProgram->enableAttributeArray(attrNorCoords);
 
-    // Übergebe die Textur an die Uniform-Variable
-    // Die 0 steht dabei für die verwendete Unit (0=Standard)
-    shaderProgram.setUniformValue("texture", 0);
+    planet->_texture->bind(0);
+    planet->shaderProgram->setUniformValue("texture", 0);
 
-    planet->_texture->bind();
+    if(planet->planetName == "sun"){
+        planet->distortionTex->bind(1);
+        planet->shaderProgram->setUniformValue("distortionTex",1);
+    }
 
-    // Lokalisiere bzw. definiere die Schnittstelle für die Transformationsmatrix
     int unifMatrix = 0;
-    unifMatrix = this->shaderProgram.uniformLocation("matrix"); // #version 130
-    this->shaderProgram.setUniformValue(unifMatrix, model);
-    // Fülle die Attribute-Buffer mit den korrekten Daten
-
+    unifMatrix = planet->shaderProgram->uniformLocation("modelMatrix");
+    planet->shaderProgram->setUniformValue(unifMatrix, model);
     int unifMatrix1 = 1;
-    unifMatrix1 = this->shaderProgram.uniformLocation("perspectiveMatrix");
-    shaderProgram.setUniformValue(unifMatrix1,perspective);
+    unifMatrix1 = planet->shaderProgram->uniformLocation("perspectiveMatrix");
+    planet->shaderProgram->setUniformValue(unifMatrix1, perspective);
+    int unifMatrix2 = 2;
+    unifMatrix2 = planet->shaderProgram->uniformLocation("viewMatrix");
+    planet->shaderProgram->setUniformValue(unifMatrix2, view);
+    int unifTime = 3;
+    unifTime = planet->shaderProgram->uniformLocation("time");
+    planet->shaderProgram->setUniformValue(unifTime, this->time);
+    int unifMatrix3 = 4;
+    unifMatrix3 = planet->shaderProgram->uniformLocation("normalMatrix");
+    planet->shaderProgram->setUniformValue(unifMatrix3, n);
+    int unifLightP = 5;
+    unifLightP = planet->shaderProgram->uniformLocation("lightPosition");
+    planet->shaderProgram->setUniformValue(unifLightP, lightPosition);
+    int unifLightI = 6;
+    unifLightI = planet->shaderProgram->uniformLocation("lightIntensity");
+    planet->shaderProgram->setUniformValue(unifLightI, lightIntensity);
+    int unifKd = 7;
+    unifKd = planet->shaderProgram->uniformLocation("kd");
+    planet->shaderProgram->setUniformValue(unifKd, kd);
+    int unifKa = 8;
+    unifKa = planet->shaderProgram->uniformLocation("ka");
+    planet->shaderProgram->setUniformValue(unifKa, ka);
+    int unifKs = 9;
+    unifKs = planet->shaderProgram->uniformLocation("ks");
+    planet->shaderProgram->setUniformValue(unifKs, ks);
+    int unifShine = 10;
+    unifShine = planet->shaderProgram->uniformLocation("shininess");
+   planet->shaderProgram->setUniformValue(unifShine, shininess);
 
 
-    int offset = 0;
-    int stride = 8 * sizeof(GLfloat);
-    this->shaderProgram.setAttributeBuffer(attrVertices, GL_FLOAT, offset, 4, stride);
-    offset += 4 * sizeof(GLfloat);
-    shaderProgram.setAttributeBuffer(attrTexCoords, GL_FLOAT, offset, 4, stride);
+
+    if(this->hasTexCoord){
+        int offset = 0;
+        int stride = 12 * sizeof(GLfloat);
+        planet->shaderProgram->setAttributeBuffer(attrVertices, GL_FLOAT, offset, 4, stride);
+        offset += 4 * sizeof(GLfloat);
+        planet->shaderProgram->setAttributeBuffer(attrNorCoords, GL_FLOAT, offset, 4, stride);
+        offset += 4 * sizeof(GLfloat);
+        planet->shaderProgram->setAttributeBuffer(attrTexCoords, GL_FLOAT, offset, 4, stride);
+    }
+    else{
+        int offset = 0;
+        int stride = 8 * sizeof(GLfloat);
+        planet->shaderProgram->setAttributeBuffer(attrVertices, GL_FLOAT, offset, 4, stride);
+        offset += 4 * sizeof(GLfloat);
+        planet->shaderProgram->setAttributeBuffer(attrNorCoords, GL_FLOAT, offset, 4, stride);
+    }
 
     glDrawElements(GL_TRIANGLES, this->iboLength, GL_UNSIGNED_INT, 0);
 
-    this->shaderProgram.disableAttributeArray(attrTexCoords);
-    this->shaderProgram.disableAttributeArray(attrVertices);
+    planet->shaderProgram->disableAttributeArray(attrTexCoords);
+    planet->shaderProgram->disableAttributeArray(attrVertices);
+    planet->shaderProgram->disableAttributeArray(attrNorCoords);
+    planet->_texture->release();
 
+    if(planet->planetName == "sun"){
+        planet->distortionTex->release();
+    }
     this->vbo.release();
     this->ibo.release();
 
     // Löse das Shader-Programm
-    this->shaderProgram.release();
+    planet->shaderProgram->release();
 }

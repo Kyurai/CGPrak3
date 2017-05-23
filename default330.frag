@@ -7,6 +7,7 @@
 
 uniform sampler2D texture;
 layout(location = 1)in vec4 texC;
+layout(location = 2)in vec4 norC;
 layout(location = 0)out vec4 fragColor; // must be at 0
 
 void main()

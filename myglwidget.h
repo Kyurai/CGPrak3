@@ -58,10 +58,14 @@ private:
     unsigned int vboLength;
     unsigned int iboLength;
 
-    QOpenGLShaderProgram shaderProgram;
+    //QOpenGLShaderProgram shaderProgram;
+    QOpenGLShaderProgram *default130, *normal, *sunShader , *phongShader;
     std::stack<QMatrix4x4> matrixStack;
 
     QOpenGLTexture*  qTex;
+    bool hasTexCoord;
+
+    float time = 0.0f;
 
 public:
    MyGLWidget();
@@ -75,7 +79,8 @@ public:
    void mouseMoveEvent(QMouseEvent *event);
    void loadPlanets();
    void fillBuffers();
-   void render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model);
+   void createShaders();
+   void render(Planet *planet, QMatrix4x4 perspective, QMatrix4x4 model, QMatrix4x4 view);
 
    //Getter & Setter for Attributes
    void setAngle(int _angle);
